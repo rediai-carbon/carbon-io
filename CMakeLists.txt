@@ -154,6 +154,16 @@ if(WIN32)
     target_link_libraries(_select PUBLIC ws2_32.lib)
 endif()
 
+# The build-tree RPATH records the absolute vcpkg directory and an empty
+# component. Installed extensions sit beside their Python runtime. In-tree
+# tests pass an explicit LD_LIBRARY_PATH instead of baking that directory in.
+set_target_properties(_socket _ssl _select PROPERTIES
+        SKIP_BUILD_RPATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "\$ORIGIN"
+        INSTALL_RPATH_USE_LINK_PATH FALSE
+)
+
 # Provide an install target if this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL io)
     option(BUILD_TESTING "Build tests. Enabled by default." ON)
@@ -197,12 +207,19 @@ if(CMAKE_PROJECT_NAME STREQUAL io)
                         ENVIRONMENT
                         "PYTHONPATH=$<TARGET_FILE_DIR:_socket>\;$<TARGET_FILE_DIR:sockettesthelper>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>"
                 )
-            elseif (APPLE OR LINUX)
+            elseif (APPLE)
                 set_tests_properties(
                         ${PYTHON_TEST}
                         PROPERTIES
                         ENVIRONMENT
                         "PYTHONPATH=$<TARGET_FILE_DIR:_socket>:$<TARGET_FILE_DIR:sockettesthelper>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>"
+                )
+            elseif (LINUX)
+                set_tests_properties(
+                        ${PYTHON_TEST}
+                        PROPERTIES
+                        ENVIRONMENT
+                        "PYTHONPATH=$<TARGET_FILE_DIR:_socket>:$<TARGET_FILE_DIR:sockettesthelper>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib;LD_LIBRARY_PATH=${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>"
                 )
             else()
                 message(FATAL_ERROR "Unsupported platform")

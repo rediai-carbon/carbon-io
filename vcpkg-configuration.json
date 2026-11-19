@@ -7,8 +7,9 @@
   "registries": [
     {
       "kind": "git",
-      "repository": "https://github.com/carbonengine/vcpkg-registry.git",
-      "baseline": "194abd7292570bb1427e3447c175eaf102c2a108",
+      "repository": "https://github.com/rediai-carbon/carbon-vcpkg-registry.git",
+      "baseline": "3548d22bf31e2c0359e447aaa9ef19821b6fae01",
+      "reference": "3548d22bf31e2c0359e447aaa9ef19821b6fae01",
       "packages": [
 	"greenlet",
 	"carbon-*",
