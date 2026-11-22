@@ -107,7 +107,9 @@ source_group("_ssl" FILES
 target_link_libraries(_ssl
         PRIVATE
         Python3::Python
-        libuv::uv
+        # Static Linux libuv publishes libuv::uv_a and not libuv::uv.
+        # _socket already selects the target that exists.
+        $<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>
         CcpCore
         PUBLIC
         OpenSSL::Crypto
