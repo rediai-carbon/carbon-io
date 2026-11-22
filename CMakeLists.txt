@@ -11,6 +11,13 @@ include(cmake/CcpBuildConfigurations.cmake)
 
 find_package(libuv CONFIG REQUIRED)
 find_package(Python3 COMPONENTS Development Interpreter REQUIRED)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # The host executable owns the one Python runtime. These modules keep the
+    # Python symbols undefined so they cannot carry a second interpreter.
+    set(CARBON_IO_PYTHON_LIB)
+else()
+    set(CARBON_IO_PYTHON_LIB Python3::Python)
+endif()
 
 set(OPENSSL_USE_STATIC_LIBS ON)
 find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
@@ -35,7 +42,7 @@ target_link_libraries(_socket
         PRIVATE
         $<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>
         CcpCore
-        Python3::Python
+        ${CARBON_IO_PYTHON_LIB}
 )
 if(WIN32)
     target_link_libraries(_socket
@@ -106,7 +113,7 @@ source_group("_ssl" FILES
 )
 target_link_libraries(_ssl
         PRIVATE
-        Python3::Python
+        ${CARBON_IO_PYTHON_LIB}
         # Static Linux libuv publishes libuv::uv_a and not libuv::uv.
         # _socket already selects the target that exists.
         $<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>
@@ -147,13 +154,18 @@ source_group("_select" FILES
 target_link_libraries(_select
         PRIVATE
         CcpCore
-        Python3::Python
+        ${CARBON_IO_PYTHON_LIB}
 )
 target_precompile_headers(_select PRIVATE
         <CcpMacros.h>
 )
 if(WIN32)
     target_link_libraries(_select PUBLIC ws2_32.lib)
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    foreach(io_target _socket _ssl _select)
+        target_include_directories(${io_target} PRIVATE ${Python3_INCLUDE_DIRS})
+    endforeach()
 endif()
 
 # Provide an install target if this is the top level project only
