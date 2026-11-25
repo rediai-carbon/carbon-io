@@ -23,7 +23,12 @@ set(OPENSSL_USE_STATIC_LIBS ON)
 find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
 find_package(carbon-core CONFIG REQUIRED)
 find_package(carbon-scheduler CONFIG REQUIRED)
-
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND TARGET CcpCore)
+    # Blue release installs libCcpCore.so; imported configs must not select debug SONAMEs.
+    set_property(TARGET CcpCore PROPERTY MAP_IMPORTED_CONFIG_DEBUG Release)
+    set_property(TARGET CcpCore PROPERTY MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+    set_property(TARGET CcpCore PROPERTY MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+endif()
 
 # --- _socket ---
 ccp_add_library(_socket SHARED
